@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: meridian-db
+    environment:
+      POSTGRES_DB: meridian
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: meridian_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - meridian-db-data:/var/lib/postgresql/data
+
+volumes:
+  meridian-db-data:
