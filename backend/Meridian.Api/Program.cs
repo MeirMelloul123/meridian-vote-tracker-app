@@ -12,6 +12,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<DbSeed>();
 builder.Services.AddScoped<UsersService>();
 builder.Services.AddScoped<MemberStatesService>();
+builder.Services.AddScoped<ImportService>();
+builder.Services.AddScoped<ImportProcessor>();
+builder.Services.AddScoped<VoteService>();
+builder.Services.AddScoped<ConflictService>();
 builder.Services.AddDbContext<MeridianContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 var app = builder.Build();
