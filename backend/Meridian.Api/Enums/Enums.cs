@@ -43,4 +43,35 @@
         Contradiction,  // same country twice in a vote with different values
         Conflict        // differs from the approved value, sent to review
     }
+    /// <summary>
+    /// What changed: a country's ballot or a vote's title.
+    /// </summary>
+    public enum ConflictType
+    {
+        BallotChanged,
+        TitleChanged
+    }
+
+    /// <summary>
+    /// Pending until a human accepts or rejects the incoming value.
+    /// </summary>
+    public enum ConflictStatus
+    {
+        Pending,
+        Accepted,
+        Rejected
+    }
+    /// <summary>
+    /// The kind of event recorded in the history log.
+    /// </summary>
+    public enum HistoryEventType
+    {
+        FileUploaded,
+        VoteCreated,
+        ConflictCreated,
+        ConflictAccepted,
+        ConflictRejected,
+        PositionSet,
+        SnapshotPublished
+    }
 }
