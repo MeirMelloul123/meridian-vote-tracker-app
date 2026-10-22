@@ -53,8 +53,8 @@ namespace Meridian.Api.Service
                         ImportId = import.Id,
                         RowNumber = i + 1,   // line number in the file
                         AssemblyVoteId = columns[0],
-                        CountryCode = columns.Count > 4 ? columns[4] : null,   // ⬅️ line may have missing columns
-                        Ballot = columns.Count > 6 ? columns[6] : null,        // ⬅️
+                        CountryCode = columns.Count > 4 ? columns[4] : "",   // ⬅️ line may have missing columns
+                        Ballot = columns.Count > 6 ? columns[6] : "",        // ⬅️
                         Status = RowStatus.New
                     };
 
