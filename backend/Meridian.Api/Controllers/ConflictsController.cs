@@ -1,4 +1,5 @@
-﻿using Meridian.Api.Service;
+﻿using Meridian.Api.Dto;
+using Meridian.Api.Service;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Meridian.Api.Controllers
@@ -20,6 +21,13 @@ namespace Meridian.Api.Controllers
         {
             var conflicts = await _conflictService.GetPendingAsync();
             return Ok(conflicts);
+        }
+        [HttpPost("decision")]
+        public async Task<IActionResult> Decide([FromBody] DecisionRequest? request)
+        {
+            var ok = await _conflictService.DecideAsync(request);
+            if (!ok) return Conflict("This conflict was already decided.");
+            return Ok();
         }
     }
 }
