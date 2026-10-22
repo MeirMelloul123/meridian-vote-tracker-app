@@ -15,10 +15,16 @@ namespace Meridian.Api.Controllers
             _importService = importService;
         }
         [HttpPost]
-        public async Task<IActionResult> ImportFile([FromBody] FileRequestDto fileRequest)
+        public async Task<IActionResult> ImportFile([FromForm] FileRequestDto fileRequest)
         {    var users = await _importService.ImportFile(fileRequest);
             return Ok(users);
 
+        }
+        // GET /api/import
+        [HttpGet]
+        public async Task<IActionResult> GetImports()
+        {
+            return Ok(await _importService.GetImports());
         }
         // GET /api/imports/5/report
         [HttpGet("{id}/report")]

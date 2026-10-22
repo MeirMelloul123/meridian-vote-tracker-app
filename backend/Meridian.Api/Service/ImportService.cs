@@ -18,7 +18,22 @@ namespace Meridian.Api.Service
             _context = context;
             _scopeFactory = scopeFactory;
         }
-
+        public async Task<List<ImportDto>> GetImports()
+        {
+            return await _context.Imports
+                .OrderByDescending(i => i.UploadedAt)
+                .Select(i => new ImportDto
+                {
+                    Id = i.Id,
+                    FileName = i.FileName,
+                    UploadedBy = i.UploadedBy.Name,
+                    UploadedAt = i.UploadedAt,
+                    Status = i.Status.ToString(),
+                    TotalRows = i.TotalRows,
+                    ProcessedRows = i.ProcessedRows
+                })
+                .ToListAsync();
+        }
         public async Task<FileResponse> ImportFile(FileRequestDto fileRequest)
         {
             if (fileRequest.File == null || fileRequest.File.Length == 0)
