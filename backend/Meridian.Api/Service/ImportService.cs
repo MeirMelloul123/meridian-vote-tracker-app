@@ -2,6 +2,7 @@
 using Meridian.Api.Dto;
 using Meridian.Api.Enums;
 using Meridian.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Api.Service
 {
@@ -71,5 +72,31 @@ namespace Meridian.Api.Service
 
             return FileResponse.Ok(import.Id, "File uploaded, processing started.");
         }
+        public async Task<ImportReportDto?> GetReport(int id)
+        {
+            Import? import = await _context.Imports.Include(x=>x.UploadedBy).FirstOrDefaultAsync(x => x.Id == id);
+            if (import == null) return null;
+            ImportReportDto importReportDto = new ImportReportDto();
+            importReportDto.ImportId = id;
+            importReportDto.FileName = import.FileName;
+            importReportDto.UploadedBy = import.UploadedBy?.Name ?? string.Empty;
+            importReportDto.Status = import.Status.ToString();
+            importReportDto.UploadedAt = import.UploadedAt;
+            importReportDto.TotalRows = import.TotalRows;
+            importReportDto.Counts= await _context.ImportRows.Where(y=>y.ImportId==id).GroupBy(x=>x.Status).Select(g => new { Status = g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Status.ToString(), g => g.Count);
+            importReportDto.RowsNotStored = await _context.ImportRows .Where(y => y.ImportId == id && y.Status != RowStatus.New && y.Status != RowStatus.Unchanged).OrderBy(y => y.RowNumber)
+                                                                        .Select(y => new ImportRowDto
+                                                                        {
+                                                                            RowNumber = y.RowNumber,
+                                                                            AssemblyVoteId = y.AssemblyVoteId,
+                                                                            CountryCode = y.CountryCode,
+                                                                            Ballot = y.Ballot,
+                                                                            Status = y.Status.ToString(),
+                                                                            Reason = y.Reason
+                                                                        }).ToListAsync();
+            return importReportDto;
+
+        }
     }
+
 }

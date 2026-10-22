@@ -62,7 +62,7 @@ namespace Meridian.Api.Service
                             .Where(cv => cv.VoteId == vote.Id && cv.CountryCode == columns[4])
                             .Select(cv => cv.Ballot)
                             .FirstAsync();
-
+                        row.Reason = $"Approved value is {current}, file says {columns[6]}";
                         await _conflictService.SaveConflictAsync(vote.Id, columns[4], current.ToString(), columns[6], import.Id);
                     }
 

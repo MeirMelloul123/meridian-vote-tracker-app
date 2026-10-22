@@ -20,5 +20,13 @@ namespace Meridian.Api.Controllers
             return Ok(users);
 
         }
+        // GET /api/imports/5/report
+        [HttpGet("{id}/report")]
+        public async Task<IActionResult> GetReport(int id)
+        {
+            var report = await _importService.GetReport(id);
+            if (report == null) return NotFound();
+            return Ok(report);
+        }
     }
 }
