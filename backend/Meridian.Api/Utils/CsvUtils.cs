@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace Meridian.Api.Utils
 {
@@ -24,6 +25,8 @@ namespace Meridian.Api.Utils
         // Returns the error message, or null if the row is valid
         public static string? CheckRow(List<string> columns, List<string> countryCodes)
         {
+            if (!DateOnly.TryParseExact(columns[2], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                return $"Invalid date '{columns[2]}'";
             if (columns.Count < 7)
                 return "Malformed line";
             if (!countryCodes.Contains(columns[4]))
