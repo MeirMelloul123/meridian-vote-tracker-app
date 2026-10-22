@@ -3,8 +3,6 @@ using Meridian.Api.Enums;
 using Meridian.Api.Models;
 using Meridian.Api.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Text;
 
 namespace Meridian.Api.Service
 {
@@ -41,9 +39,12 @@ namespace Meridian.Api.Service
                 await _db.SaveChangesAsync();
 
                 var countryCodes = await _db.MemberStates.Select(m => m.Code).ToListAsync();
-                var seen = new HashSet<string>();
+                var seen = new HashSet<string>();   // (vote|country) already seen in this file
+
                 for (int i = 1; i < lines.Length; i++)
                 {
+                    if (string.IsNullOrWhiteSpace(lines[i])) continue;   // ⬅️ empty line at the end of the file
+
                     var columns = CsvUtils.SplitCsvLine(lines[i]);
                     // 0 vote id, 1 session, 2 date, 3 title, 4 country code, 5 country name, 6 ballot
 
@@ -52,13 +53,23 @@ namespace Meridian.Api.Service
                         ImportId = import.Id,
                         RowNumber = i + 1,   // line number in the file
                         AssemblyVoteId = columns[0],
-                        CountryCode = columns[4],
-                        Ballot = columns[6],
+                        CountryCode = columns.Count > 4 ? columns[4] : null,   // ⬅️ line may have missing columns
+                        Ballot = columns.Count > 6 ? columns[6] : null,        // ⬅️
                         Status = RowStatus.New
                     };
 
+                    // 1. Invalid line   ⬅️ moved BEFORE the duplicate check (it uses columns[4])
                     var error = CsvUtils.CheckRow(columns, countryCodes);
-                    // check duplicate line in the file with the same assembly vote id and country code not add in country vote table
+                    if (error != null)
+                    {
+                        row.Status = RowStatus.Invalid;
+                        row.Reason = error;
+                        _db.ImportRows.Add(row);
+                        import.ProcessedRows++;
+                        continue;
+                    }
+
+                    // 2. Same vote and country twice in this file: not added again to CountryVotes
                     var key = columns[0] + "|" + columns[4];
                     if (seen.Contains(key))
                     {
@@ -69,15 +80,8 @@ namespace Meridian.Api.Service
                         continue;
                     }
                     seen.Add(key);
-                    if (error != null)
-                    {
-                        row.Status = RowStatus.Invalid;
-                        row.Reason = error;
-                        _db.ImportRows.Add(row);
-                        import.ProcessedRows++;
-                        continue;
-                    }
 
+                    // 3. Valid line: vote, country vote, conflict
                     var vote = await _voteService.FindOrCreateVoteAsync(columns[0], columns, import.Id);
                     row.Status = await _voteService.SaveCountryVoteAsync(vote, columns[4], Enum.Parse<Ballot>(columns[6]), import.Id);
 
@@ -106,6 +110,5 @@ namespace Meridian.Api.Service
                 _lock.Release();
             }
         }
-        
     }
 }
