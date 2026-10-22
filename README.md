@@ -12,27 +12,18 @@ and let an analyst decide every conflict, with full traceability.
 
 ## Run the project
 
-### 1. Database + API
+From the repository root:
 
 ```bash
 docker compose up --build
 ```
 
+- Frontend: http://localhost:4200
 - API: http://localhost:8080
 - PostgreSQL: localhost:5433 (database `meridian`, user `meridian`)
 
 At startup the API applies the EF Core migrations and loads the reference data:
 the member states from `member_states.csv` and the users (Dana, Omar, Lena).
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install --legacy-peer-deps
-ng serve
-```
-
-Open http://localhost:4200
 
 ## Main API endpoints
 
@@ -47,7 +38,7 @@ Open http://localhost:4200
 
 ## How to try it
 
-1. Open the app, choose a user in the top bar
+1. Open http://localhost:4200 and choose a user in the top bar
 2. Upload `assembly_export_2024_q1.csv` → rows are imported; invalid, malformed and duplicate rows are reported
 3. Upload `assembly_export_2024_q1_rev2.csv` → differences with the approved data become conflicts
 4. Check the report: `GET /api/import/{id}/report`

@@ -27,4 +27,16 @@ export class ApiService {
   getReport(importId: number) {
     return this.http.get<any>(`${API}/import/${importId}/report`);
   }
+  getConflicts() {
+  return this.http.get<any[]>(`${API}/conflicts`);
+}
+
+decide(conflictId: number, accept: boolean, comment: string) {
+  return this.http.post(`${API}/conflicts/decision`, {
+    id: conflictId,
+    userId: this.userId,
+    isConflictAccepted: accept,
+    comment: comment
+  });
+}
 }

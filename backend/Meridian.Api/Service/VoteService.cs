@@ -37,7 +37,15 @@ namespace Meridian.Api.Service
             }
             else if (vote.ResolutionTitle != line[3])
             {
-                await _conflictService.SaveConflictAsync(vote.Id, null, vote.ResolutionTitle, line[3], importId);
+                // Create the title conflict only once
+                var alreadyPending = await _db.Conflicts.AnyAsync(c =>
+                    c.VoteId == vote.Id
+                    && c.ConflictType == ConflictType.TitleChanged
+                    && c.ProposedValue == line[3]
+                    && c.ConflictStatus == ConflictStatus.Pending);
+
+                if (!alreadyPending)
+                    await _conflictService.SaveConflictAsync(vote.Id, null, vote.ResolutionTitle, line[3], importId);
             }
 
             return vote;
