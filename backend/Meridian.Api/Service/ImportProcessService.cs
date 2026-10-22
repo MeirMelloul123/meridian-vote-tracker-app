@@ -3,6 +3,7 @@ using Meridian.Api.Enums;
 using Meridian.Api.Models;
 using Meridian.Api.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Text;
 
 namespace Meridian.Api.Service
@@ -40,7 +41,7 @@ namespace Meridian.Api.Service
                 await _db.SaveChangesAsync();
 
                 var countryCodes = await _db.MemberStates.Select(m => m.Code).ToListAsync();
-
+                var seen = new HashSet<string>();
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var columns = CsvUtils.SplitCsvLine(lines[i]);
@@ -57,6 +58,17 @@ namespace Meridian.Api.Service
                     };
 
                     var error = CsvUtils.CheckRow(columns, countryCodes);
+                    // check duplicate line in the file with the same assembly vote id and country code not add in country vote table
+                    var key = columns[0] + "|" + columns[4];
+                    if (seen.Contains(key))
+                    {
+                        row.Status = RowStatus.Duplicate;
+                        row.Reason = "Same vote and country already in this file";
+                        _db.ImportRows.Add(row);
+                        import.ProcessedRows++;
+                        continue;
+                    }
+                    seen.Add(key);
                     if (error != null)
                     {
                         row.Status = RowStatus.Invalid;
