@@ -18,7 +18,7 @@ namespace Meridian.Api.Service
 
         public async Task SaveConflictAsync(int voteId, string? countryCode, string currentValue, string proposedValue, int importId)
         {
-            _db.Conflicts.Add(new Conflict
+            _db.Conflicts.Add(new Models.Conflict
             {
                 ConflictType = countryCode == null ? ConflictType.TitleChanged : ConflictType.BallotChanged,
                 VoteId = voteId,
