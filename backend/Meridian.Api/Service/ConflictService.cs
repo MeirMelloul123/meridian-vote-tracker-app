@@ -1,6 +1,7 @@
 ﻿using Meridian.Api.Data;
 using Meridian.Api.Enums;
 using Meridian.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Api.Service
 {
@@ -27,6 +28,14 @@ namespace Meridian.Api.Service
                 ConflictStatus = ConflictStatus.Pending
             });
             await _db.SaveChangesAsync();
+        }
+        public async Task<List<Conflict>> GetPendingAsync()
+        {
+            return await _db.Conflicts
+                .Where(c => c.ConflictStatus == ConflictStatus.Pending)
+                .Include(c => c.Vote)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
         }
     }
 }

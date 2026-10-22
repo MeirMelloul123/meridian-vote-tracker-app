@@ -1,6 +1,7 @@
 ﻿using Meridian.Api.Data;
 using Meridian.Api.Enums;
 using Meridian.Api.Models;
+using Meridian.Api.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 
@@ -38,9 +39,11 @@ namespace Meridian.Api.Service
                 import.TotalRows = lines.Length - 1;   // minus the header
                 await _db.SaveChangesAsync();
 
+                var countryCodes = await _db.MemberStates.Select(m => m.Code).ToListAsync();
+
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    var columns = SplitCsvLine(lines[i]);
+                    var columns = CsvUtils.SplitCsvLine(lines[i]);
                     // 0 vote id, 1 session, 2 date, 3 title, 4 country code, 5 country name, 6 ballot
 
                     var row = new ImportRow
@@ -52,6 +55,16 @@ namespace Meridian.Api.Service
                         Ballot = columns[6],
                         Status = RowStatus.New
                     };
+
+                    var error = CsvUtils.CheckRow(columns, countryCodes);
+                    if (error != null)
+                    {
+                        row.Status = RowStatus.Invalid;
+                        row.Reason = error;
+                        _db.ImportRows.Add(row);
+                        import.ProcessedRows++;
+                        continue;
+                    }
 
                     var vote = await _voteService.FindOrCreateVoteAsync(columns[0], columns, import.Id);
                     row.Status = await _voteService.SaveCountryVoteAsync(vote, columns[4], Enum.Parse<Ballot>(columns[6]), import.Id);
@@ -81,22 +94,6 @@ namespace Meridian.Api.Service
                 _lock.Release();
             }
         }
-
-        // Splits a CSV line, ignoring commas inside quotes
-        private static List<string> SplitCsvLine(string line)
-        {
-            var result = new List<string>();
-            var current = new StringBuilder();
-            var inQuotes = false;
-
-            foreach (var c in line)
-            {
-                if (c == '"') inQuotes = !inQuotes;
-                else if (c == ',' && !inQuotes) { result.Add(current.ToString()); current.Clear(); }
-                else current.Append(c);
-            }
-            result.Add(current.ToString());
-            return result;
-        }
+        
     }
 }
